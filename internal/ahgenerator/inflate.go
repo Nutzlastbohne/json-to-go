@@ -2,73 +2,97 @@ package ahgenerator
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
 )
 
-func inflateJson(jsonPath string) ([]byte, error) {
-	rawJson := loadRawJson(jsonPath)
-	inflatedJson := seekDestroy(jsonPath, rawJson)
+func InflateJson(jsonPath string) ([]byte, error) {
+	rawJson, err := loadRawJson(jsonPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	inflatedJson, err := inflate(jsonPath, rawJson)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return json.Marshal(inflatedJson)
 }
 
-func seekDestroy(jsonPath string, rawJson map[string]interface{}) map[string]interface{} {
+func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[string]interface{}, err error) {
 	var refPath string
-	//var err error
 	var ok bool
-	resolvedJson := make(map[string]interface{})
 
 	for key, value := range rawJson {
 		if key == "$ref" {
 			if refPath, ok = value.(string); !ok {
-				log.Panicf("invalid $ref file: %v", refPath)
+				return nil, fmt.Errorf("invalid $ref value must be string, but is: '%v' (type=%T)", refPath, refPath)
 			}
 
-			if refPath[0] == '#' {
+			if isSelfReference(refPath) {
 				log.Printf("file internal reference found - will be handled by a-h gen")
 				resolvedJson[key] = value
 				continue
 			}
 
 			if strings.Contains(refPath, "#") {
-				log.Printf("WARN - sub-file references not supported yet.") // more likely a panic?
-				continue
+				return nil, fmt.Errorf("self-references ('%v') not supported yet", refPath)
 			}
 
 			if !filepath.IsAbs(refPath) {
 				refPath = filepath.Dir(jsonPath) + "/" + refPath
 			}
 
-			refJson := loadRawJson(refPath)
-			resolvedRefJson := seekDestroy(jsonPath, refJson)
+			refJson, err := loadRawJson(refPath)
 
-			// add to current node
-			for refKey, refVal := range resolvedRefJson {
+			if err != nil {
+				return nil, fmt.Errorf("loading referenced json failed: %v", err)
+			}
+
+			inflatedRefJson, err := inflate(jsonPath, refJson)
+
+			if err != nil {
+				return nil, fmt.Errorf("inflating referenced json '%v' failed: %v", refPath, err)
+			}
+
+			// add all found nodes to current node
+			for refKey, refVal := range inflatedRefJson {
 				resolvedJson[refKey] = refVal
 			}
 		} else if nestedMap, isMap := value.(map[string]interface{}); isMap {
-			resolvedNestedMap := seekDestroy(jsonPath, nestedMap)
-			resolvedJson[key] = resolvedNestedMap
+			inflatedMap, err := inflate(jsonPath, nestedMap)
+			if err != nil {
+				return nil, err
+			}
+
+			resolvedJson[key] = inflatedMap
 		} else {
 			resolvedJson[key] = value
 		}
 	}
 
-	return resolvedJson
+	return resolvedJson, nil
 }
 
-func loadRawJson(refPath string) map[string]interface{} {
+func isSelfReference(refPath string) bool {
+	return refPath[0] == '#'
+}
+
+func loadRawJson(refPath string) (rawJson map[string]interface{}, err error) {
 	var fileBytes []byte
-	var err error
 
 	if fileBytes, err = ioutil.ReadFile(refPath); err != nil {
-		log.Panicf("reading file failed: %v", err)
+		return nil, fmt.Errorf("reading file failed: %v", err)
 	}
-	var refJson map[string]interface{}
-	if err = json.Unmarshal(fileBytes, &refJson); err != nil {
-		log.Panicf("unmarshalling referenced json failed: %v", err)
+
+	if err = json.Unmarshal(fileBytes, &rawJson); err != nil {
+		return nil, fmt.Errorf("unmarshalling json failed: %v", err)
 	}
-	return refJson
+	return rawJson, nil
 }

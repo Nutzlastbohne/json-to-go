@@ -13,7 +13,7 @@ import (
 
 func ToStruct(filepath string) (err error) {
 	var fileSchema *jsonschema.Schema
-	inflatedBytes, err := inflateJson(filepath)
+	inflatedBytes, err := InflateJson(filepath)
 
 	if err != nil {
 		return fmt.Errorf("inflating '%v' failed", filepath)
