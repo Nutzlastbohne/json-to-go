@@ -85,11 +85,11 @@ func isSelfReference(refPath string) bool {
 	return refPath[0] == '#'
 }
 
-func loadRawJson(refPath string) (rawJson map[string]interface{}, err error) {
+func loadRawJson(filePath string) (rawJson map[string]interface{}, err error) {
 	var fileBytes []byte
 
-	if fileBytes, err = ioutil.ReadFile(refPath); err != nil {
-		return nil, fmt.Errorf("reading file failed: %v", err)
+	if fileBytes, err = ioutil.ReadFile(filePath); err != nil {
+		return nil, fmt.Errorf("reading file '%v' failed: %v", filePath, err)
 	}
 
 	if err = json.Unmarshal(fileBytes, &rawJson); err != nil {
