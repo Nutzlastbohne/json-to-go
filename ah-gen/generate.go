@@ -87,7 +87,7 @@ func seekDestroy(jsonPath string, rawJson map[string]interface{}) map[string]int
 				continue
 			}
 
-			if !isAbsolute(refPath) {
+			if !filepath.IsAbs(refPath) {
 				refPath = filepath.Dir(jsonPath) + "/" + refPath
 			}
 
@@ -121,14 +121,6 @@ func loadRawJson(refPath string) map[string]interface{} {
 		log.Panicf("unmarshalling referenced json failed: %v", err)
 	}
 	return refJson
-}
-
-func isAbsolute(jsonPath string) bool {
-	if len(jsonPath) < 2 {
-		return false
-	}
-
-	return jsonPath[0] == '/' || jsonPath[1] == ':' // absolute windows paths start with [DRIVE-LETTER]:
 }
 
 func prettyPrint(thing interface{}) {
