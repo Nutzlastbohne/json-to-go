@@ -26,6 +26,7 @@ func InflateJson(jsonPath string) ([]byte, error) {
 }
 
 func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[string]interface{}, err error) {
+	resolvedJson = make(map[string]interface{})
 	var refPath string
 	var ok bool
 

@@ -16,7 +16,7 @@ func ToStruct(filepath string) (err error) {
 	inflatedBytes, err := InflateJson(filepath)
 
 	if err != nil {
-		return fmt.Errorf("inflating '%v' failed", filepath)
+		return fmt.Errorf("inflating '%v' failed: %v", filepath, err)
 	}
 
 	if fileSchema, err = jsonschema.Parse(string(inflatedBytes)); err != nil {
