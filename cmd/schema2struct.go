@@ -21,6 +21,7 @@ func main() {
 
 	if err != nil {
 		fmt.Printf("generating structs failed: %v", err)
+		return
 	}
 
 	if target != "" {
@@ -34,8 +35,8 @@ func main() {
 	} else {
 		w = os.Stdout
 	}
+	defer w.Close()
 
 
 	fmt.Fprint(w, result)
-	w.Close()
 }
