@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strings"
 )
+
+const refPathNodeSeparator = "#"
 
 func InflateJson(jsonPath string) ([]byte, error) {
 	rawJson, err := loadRawJson(jsonPath)
@@ -36,21 +37,24 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 				return nil, fmt.Errorf("invalid $ref value must be string, but is: '%v' (type=%T)", refPath, refPath)
 			}
 
-			if isSelfReference(refPath) {
-				log.Printf("file internal reference found - will be handled by a-h gen")
+			filePath, nodePath := splitRefPath(refPath)
+
+			if filePath == "" && nodePath != "" { // refPath is self reference
+				// leave value as is. file internal reference will be handled by a-h/generator
 				resolvedJson[key] = value
 				continue
 			}
 
-			if strings.Contains(refPath, "#") {
-				return nil, fmt.Errorf("self-references ('%v') not supported yet", refPath)
+			if nodePath != "" {
+				// TODO: load json, go to specified node
+				return nil, fmt.Errorf("deep references ('%v') not supported yet", refPath)
 			}
 
-			if !filepath.IsAbs(refPath) {
-				refPath = filepath.Dir(jsonPath) + "/" + refPath
+			if !filepath.IsAbs(filePath) {
+				filePath = filepath.Dir(jsonPath) + "/" + filePath
 			}
 
-			refJson, err := loadRawJson(refPath)
+			refJson, err := loadRawJson(filePath)
 
 			if err != nil {
 				return nil, fmt.Errorf("loading referenced json failed: %v", err)
@@ -59,7 +63,7 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 			inflatedRefJson, err := inflate(jsonPath, refJson)
 
 			if err != nil {
-				return nil, fmt.Errorf("inflating referenced json '%v' failed: %v", refPath, err)
+				return nil, fmt.Errorf("inflating referenced json '%v' failed: %v", filePath, err)
 			}
 
 			// add all found nodes to current node
@@ -79,6 +83,21 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 	}
 
 	return resolvedJson, nil
+}
+
+func splitRefPath(refPath string) (filePath, nodePath string) {
+	if len(refPath) < 1 {
+		return filePath, nodePath
+	}
+
+	refParts := strings.Split(refPath, refPathNodeSeparator)
+	filePath = refParts[0]
+
+	if len(refParts) > 1 {
+		nodePath = refParts[1]
+	}
+
+	return filePath, nodePath
 }
 
 func isSelfReference(refPath string) bool {
