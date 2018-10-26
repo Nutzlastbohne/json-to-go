@@ -16,6 +16,20 @@
       "description": "Age in years which must be equal to or greater than zero.",
       "type": "integer",
       "minimum": 0
+    },
+    "address": {
+      "type": "object",
+      "title": "address",
+      "properties": {
+        "street": {
+          "type": "string",
+          "description": "street of the dude"
+        },
+        "height": {
+          "type": "number",
+          "description": "the height of... dunno... something"
+        }
+      }
     }
   }
 }

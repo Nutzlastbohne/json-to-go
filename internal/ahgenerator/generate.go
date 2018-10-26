@@ -1,6 +1,7 @@
 package ahgenerator
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -10,10 +11,16 @@ import (
 
 func ToStruct(schemaPath string) (gocode string, err error) {
 	var fileSchema *jsonschema.Schema
-	inflatedBytes, err := InflateJson(schemaPath)
+	inflatedJson, err := InflateJson(schemaPath)
 
 	if err != nil {
 		return "", fmt.Errorf("inflating '%v' failed: %v", schemaPath, err)
+	}
+
+	inflatedBytes, err := json.Marshal(inflatedJson)
+
+	if err != nil {
+		return "", fmt.Errorf("marshalling inflated json failed: %v", err)
 	}
 
 	if fileSchema, err = jsonschema.Parse(string(inflatedBytes)); err != nil {

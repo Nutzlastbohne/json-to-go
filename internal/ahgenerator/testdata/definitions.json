@@ -1,0 +1,37 @@
+{
+  "id": "https://example.com/arrays.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "file with some definitions",
+  "definitions": {
+    "veggie": {
+      "type": "object",
+      "required": [ "veggieName", "veggieLike" ],
+      "properties": {
+        "veggieName": {
+          "type": "string",
+          "description": "The name of the vegetable."
+        },
+        "veggieLike": {
+          "type": "boolean",
+          "description": "Do I like this vegetable?"
+        },
+        "veggiOrigin": {
+          "$ref": "#/definitions/origin"
+        }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "properties": {
+        "planet": {
+          "type": "string",
+          "description": "from which planet did you get this? (relevant for taxes!)"
+        },
+        "pizzaCompatible": {
+          "type": "boolean",
+          "description": "if no good for pizza, no good for me"
+        }
+      }
+    }
+  }
+}

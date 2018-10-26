@@ -10,67 +10,59 @@ import (
 
 const refPathNodeSeparator = "#"
 
-func InflateJson(jsonPath string) ([]byte, error) {
+func InflateJson(jsonPath string) (map[string]interface{}, error) {
 	rawJson, err := loadRawJson(jsonPath)
 
 	if err != nil {
 		return nil, err
 	}
 
-	inflatedJson, err := inflate(jsonPath, rawJson)
+	filePath, _ := splitRefPath(jsonPath)
+	inflatedJson, err := inflate(filePath, rawJson)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return json.Marshal(inflatedJson)
+	return inflatedJson, nil
 }
 
 func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[string]interface{}, err error) {
 	resolvedJson = make(map[string]interface{})
-	var refPath string
+	var refValue string
 	var ok bool
 
 	for key, value := range rawJson {
 		if key == "$ref" {
-			if refPath, ok = value.(string); !ok {
-				return nil, fmt.Errorf("invalid $ref value must be string, but is: '%v' (type=%T)", refPath, refPath)
+			if refValue, ok = value.(string); !ok {
+				return nil, fmt.Errorf("invalid $ref value must be string, but is: '%v' (type=%T)", refValue, refValue)
 			}
 
-			filePath, nodePath := splitRefPath(refPath)
+			absJsonPath, err := filepath.Abs(jsonPath)
 
-			if filePath == "" && nodePath != "" { // refPath is self reference
-				// leave value as is. file internal reference will be handled by a-h/generator
-				resolvedJson[key] = value
-				continue
+			if err != nil {
+				return nil, fmt.Errorf("getting absolute path of '%v' failed: %v", jsonPath, absJsonPath)
 			}
 
-			if !filepath.IsAbs(filePath) {
-				filePath = filepath.Dir(jsonPath) + "/" + filePath
+			refPath, nodePath := splitRefPath(refValue)
+
+			if refPath == "" {
+				// build path for self-reference
+				refValue = jsonPath + "#" + nodePath
+			} else  {
+				// build path for reference to other file
+				rootDir, _ := filepath.Split(absJsonPath)
+				refValue = filepath.Join(rootDir, refPath) + "#" + nodePath
 			}
 
-			refJson, err := loadRawJson(filePath)
+			refJson, err := InflateJson(refValue)
 
 			if err != nil {
 				return nil, fmt.Errorf("loading referenced json failed: %v", err)
 			}
 
-			inflatedRefJson, err := inflate(jsonPath, refJson)
-
-			if nodePath != "" {
-				// only keep referenced node on inflatedRefJson
-				inflatedRefJson, err = traverse(inflatedRefJson, nodePath)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			if err != nil {
-				return nil, fmt.Errorf("inflating referenced json '%v' failed: %v", filePath, err)
-			}
-
 			// add all found nodes to current node
-			for refKey, refVal := range inflatedRefJson {
+			for refKey, refVal := range refJson {
 				resolvedJson[refKey] = refVal
 			}
 		} else if nestedMap, isMap := value.(map[string]interface{}); isMap {
@@ -119,8 +111,11 @@ func traverse(rawJson map[string]interface{}, nodePath string) (subNode map[stri
 	return currNode, nil
 }
 
+// loadRawJson loads the specified json structure. This function supports limiting the output to inner nodes (as '$ref' might do).
+// E.g. a filePath like "myschema.json#/definitions/person" will only return the json structure of /definitions/person
 func loadRawJson(filePath string) (rawJson map[string]interface{}, err error) {
 	var fileBytes []byte
+	filePath, nodePath := splitRefPath(filePath)
 
 	if fileBytes, err = ioutil.ReadFile(filePath); err != nil {
 		return nil, fmt.Errorf("reading file '%v' failed: %v", filePath, err)
@@ -129,5 +124,13 @@ func loadRawJson(filePath string) (rawJson map[string]interface{}, err error) {
 	if err = json.Unmarshal(fileBytes, &rawJson); err != nil {
 		return nil, fmt.Errorf("unmarshalling json failed: %v", err)
 	}
+
+	if nodePath != "" { // limit result to node specified by nodePath
+		rawJson, err = traverse(rawJson, nodePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return rawJson, nil
 }

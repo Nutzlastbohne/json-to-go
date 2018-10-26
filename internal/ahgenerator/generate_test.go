@@ -10,7 +10,8 @@ const root = "testdata/"
 const standaloneSchema = root + "standalone.json"
 const selfRefSchema = root + "selfRef.json"
 const otherRefSchema = root + "otherRef.json"
-const deepRefSchemaFile = root + "deepRef.json"
+const deepRefSchema = root + "deepRef.json"
+const deepNestedRefSchema = root + "deepNestedRef.json"
 
 func TestStandaloneSchema(t *testing.T) {
 	if _, err := ahgenerator.ToStruct(standaloneSchema); err != nil {
@@ -31,7 +32,13 @@ func TestReferenceToOtherSchema(t *testing.T) {
 }
 
 func TestDeepReferenceToOtherSchema(t *testing.T) {
-	if _, err := ahgenerator.ToStruct(deepRefSchemaFile); err != nil {
+	if _, err := ahgenerator.ToStruct(deepRefSchema); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDeepReferenceToOtherNestedSchema(t *testing.T) {
+	if _, err := ahgenerator.ToStruct(deepNestedRefSchema); err != nil {
 		t.Error(err)
 	}
 }
