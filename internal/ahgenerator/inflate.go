@@ -17,8 +17,7 @@ func InflateJson(jsonPath string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	filePath, _ := splitRefPath(jsonPath)
-	inflatedJson, err := inflate(filePath, rawJson)
+	inflatedJson, err := inflate(jsonPath, rawJson)
 
 	if err != nil {
 		return nil, err
@@ -38,7 +37,8 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 				return nil, fmt.Errorf("invalid $ref value must be string, but is: '%v' (type=%T)", refValue, refValue)
 			}
 
-			absJsonPath, err := filepath.Abs(jsonPath)
+			jsonFilePath, _ := splitRef(jsonPath)
+			absJsonPath, err := filepath.Abs(jsonFilePath)
 
 			if err != nil {
 				return nil, fmt.Errorf("getting absolute path of '%v' failed: %v", jsonPath, absJsonPath)
@@ -48,14 +48,18 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 
 			if refPath == "" {
 				// build path for self-reference
-				refValue = jsonPath + "#" + nodePath
-			} else  {
+				refPath = absJsonPath + "#" + nodePath
+			} else {
 				// build path for reference to other file
 				rootDir, _ := filepath.Split(absJsonPath)
-				refValue = filepath.Join(rootDir, refPath) + "#" + nodePath
+				refPath = filepath.Join(rootDir, refPath) + "#" + nodePath
 			}
 
-			refJson, err := InflateJson(refValue)
+			if refPath == jsonPath {
+				return nil, fmt.Errorf("aborting to prevent endless loop: node='%v' is referencing itself", refPath)
+			}
+
+			refJson, err := InflateJson(refPath)
 
 			if err != nil {
 				return nil, fmt.Errorf("loading referenced json failed: %v", err)
