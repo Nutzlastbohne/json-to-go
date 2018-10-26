@@ -41,10 +41,10 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 			absJsonPath, err := filepath.Abs(jsonFilePath)
 
 			if err != nil {
-				return nil, fmt.Errorf("getting absolute path of '%v' failed: %v", jsonPath, absJsonPath)
+				return nil, fmt.Errorf("getting absolute path of '%v' failed: %v", jsonPath, err)
 			}
 
-			refPath, nodePath := splitRefPath(refValue)
+			refPath, nodePath := splitRef(refValue)
 
 			if refPath == "" {
 				// build path for self-reference
@@ -83,7 +83,7 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 
 	return resolvedJson, nil
 }
-func splitRefPath(refPath string) (filePath, nodePath string) {
+func splitRef(refPath string) (filePath, nodePath string) {
 	if len(refPath) < 1 {
 		return filePath, nodePath
 	}
@@ -119,7 +119,7 @@ func traverse(rawJson map[string]interface{}, nodePath string) (subNode map[stri
 // E.g. a filePath like "myschema.json#/definitions/person" will only return the json structure of /definitions/person
 func loadRawJson(filePath string) (rawJson map[string]interface{}, err error) {
 	var fileBytes []byte
-	filePath, nodePath := splitRefPath(filePath)
+	filePath, nodePath := splitRef(filePath)
 
 	if fileBytes, err = ioutil.ReadFile(filePath); err != nil {
 		return nil, fmt.Errorf("reading file '%v' failed: %v", filePath, err)
