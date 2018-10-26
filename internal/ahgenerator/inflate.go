@@ -45,11 +45,6 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 				continue
 			}
 
-			if nodePath != "" {
-				// TODO: load json, go to specified node
-				return nil, fmt.Errorf("deep references ('%v') not supported yet", refPath)
-			}
-
 			if !filepath.IsAbs(filePath) {
 				filePath = filepath.Dir(jsonPath) + "/" + filePath
 			}
@@ -61,6 +56,14 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 			}
 
 			inflatedRefJson, err := inflate(jsonPath, refJson)
+
+			if nodePath != "" {
+				// only keep referenced node on inflatedRefJson
+				inflatedRefJson, err = traverse(inflatedRefJson, nodePath)
+				if err != nil {
+					return nil, err
+				}
+			}
 
 			if err != nil {
 				return nil, fmt.Errorf("inflating referenced json '%v' failed: %v", filePath, err)
@@ -84,7 +87,6 @@ func inflate(jsonPath string, rawJson map[string]interface{}) (resolvedJson map[
 
 	return resolvedJson, nil
 }
-
 func splitRefPath(refPath string) (filePath, nodePath string) {
 	if len(refPath) < 1 {
 		return filePath, nodePath
@@ -100,8 +102,21 @@ func splitRefPath(refPath string) (filePath, nodePath string) {
 	return filePath, nodePath
 }
 
-func isSelfReference(refPath string) bool {
-	return refPath[0] == '#'
+func traverse(rawJson map[string]interface{}, nodePath string) (subNode map[string]interface{}, err error) {
+	subNode = make(map[string]interface{})
+	nodePath = strings.TrimLeft(nodePath, "/")
+	nodes := strings.Split(nodePath, "/")
+	currNode := rawJson
+
+	for _, node := range nodes {
+		if value, ok := currNode[node].(map[string]interface{}); ok {
+			currNode = value
+		} else {
+			return nil, fmt.Errorf("traversing nodePath='%v' failed. Node '%v' not found", nodePath, node)
+		}
+	}
+
+	return currNode, nil
 }
 
 func loadRawJson(filePath string) (rawJson map[string]interface{}, err error) {

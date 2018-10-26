@@ -8,16 +8,3 @@ So it looks up referenced files, and replaces '$ref' with its content.
 
 ## Limitations:
 - only works for local files
-- can't handle references to specific nodes in other files
-
-So, this is handled
-```json
-"$ref": "metadata.json"
-```
-this isn't
-```json
-"$ref": "metadata.json#/definitions/address"
-```
-
-## TODO
-- make it work with references to specific nodes in other files
