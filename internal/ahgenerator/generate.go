@@ -2,9 +2,10 @@ package ahgenerator
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/a-h/generate"
 	"github.com/a-h/generate/jsonschema"
-	"strings"
 )
 
 func ToStruct(schemaPath string) (gocode string, err error) {

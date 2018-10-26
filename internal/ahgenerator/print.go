@@ -2,10 +2,11 @@ package ahgenerator
 
 import (
 	"fmt"
-	"github.com/a-h/generate"
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/a-h/generate"
 )
 
 func output(w io.Writer, structs map[string]generate.Struct, aliases map[string]generate.Field) {
@@ -53,7 +54,6 @@ func outputNameAndDescriptionComment(name, description string, w io.Writer) {
 	dl := strings.Split(description, "\n")
 	fmt.Fprintf(w, "// %s %s\n", name, strings.Join(dl, "\n// "))
 }
-
 
 func getOrderedFieldNames(m map[string]generate.Field) []string {
 	keys := make([]string, len(m))

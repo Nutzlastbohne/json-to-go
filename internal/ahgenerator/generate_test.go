@@ -1,8 +1,9 @@
 package ahgenerator_test
 
 import (
-	"github.com/nutzlastbohne/json-to-go/internal/ahgenerator"
 	"testing"
+
+	"github.com/nutzlastbohne/json-to-go/internal/ahgenerator"
 )
 
 const root = "testdata/"
