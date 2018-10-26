@@ -1,7 +1,7 @@
 package ahgenerator_test
 
 import (
-	"json-to-struct/internal/ahgenerator"
+	"github.com/nutzlastbohne/json-to-go/internal/ahgenerator"
 	"testing"
 )
 

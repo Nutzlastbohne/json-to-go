@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"json-to-struct/internal/ahgenerator"
+	"github.com/nutzlastbohne/json-to-go/internal/ahgenerator"
 )
 
 func main() {
