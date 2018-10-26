@@ -1,2 +1,4 @@
 github.com/a-h/generate v0.0.0-20180910173624-2df7d55b24b0 h1:or/Fcn7onoYUHXLyMlK43DbVe41CApTmmyKDJerhCuw=
 github.com/a-h/generate v0.0.0-20180910173624-2df7d55b24b0/go.mod h1:traiLYQ0YD7qUMCdjo6/jSaJRPHXniX4HVs+PhEhYpc=
+github.com/google/go-cmp v0.2.0 h1:+dTQ8DZQJz0Mb/HjFlkptS1FeQ4cWSnN941F8aEG4SQ=
+github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
