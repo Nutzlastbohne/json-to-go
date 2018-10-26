@@ -7,25 +7,25 @@ import (
 )
 
 const root = "testdata/"
-const personSchemaFile = root + "person.json"
-const arrRefSchemaFile = root + "arrayRef.json"
-const arrPersonRefSchemaFile = root + "arrayPersonRef.json"
-const deepRefSchemaFile = root + "deepReference.json"
+const standaloneSchema = root + "standalone.json"
+const selfRefSchema = root + "selfRef.json"
+const otherRefSchema = root + "otherRef.json"
+const deepRefSchemaFile = root + "deepRef.json"
 
 func TestStandaloneSchema(t *testing.T) {
-	if _, err := ahgenerator.ToStruct(personSchemaFile); err != nil {
+	if _, err := ahgenerator.ToStruct(standaloneSchema); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestSelfReferencingSchema(t *testing.T) {
-	if _, err := ahgenerator.ToStruct(arrRefSchemaFile); err != nil {
+	if _, err := ahgenerator.ToStruct(selfRefSchema); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestReferenceToOtherSchema(t *testing.T) {
-	if _, err := ahgenerator.ToStruct(arrPersonRefSchemaFile); err != nil {
+	if _, err := ahgenerator.ToStruct(otherRefSchema); err != nil {
 		t.Error(err)
 	}
 }

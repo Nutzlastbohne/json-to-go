@@ -13,7 +13,7 @@
     "dude": {
       "type": "array",
       "items": {
-        "$ref": "person.json"
+        "$ref": "standalone.json"
       }
     }
   },

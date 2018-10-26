@@ -13,7 +13,7 @@
     "dude": {
       "type": "array",
       "items": {
-        "$ref": "arrayRef.json#/definitions/veggie"
+        "$ref": "selfRef.json#/definitions/veggie"
       }
     }
   }
