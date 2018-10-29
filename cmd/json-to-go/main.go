@@ -10,7 +10,7 @@ import (
 	"github.com/nutzlastbohne/json-to-go/internal/ahgenerator"
 )
 
-const unsageMessage = `
+const usageMessage = `
 json-to-go - generates a go-struct from a json schema. The result is written to stdout by default. Specify [output-file] to write into a file.
 
 usage: json-to-go <json-schema> [output-file]
@@ -22,7 +22,7 @@ Options
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), unsageMessage)
+		fmt.Fprintf(flag.CommandLine.Output(), usageMessage)
 	}
 
 	flag.Parse()
