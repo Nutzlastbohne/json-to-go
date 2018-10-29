@@ -10,13 +10,34 @@ import (
 	"github.com/nutzlastbohne/json-to-go/internal/ahgenerator"
 )
 
+const unsageMessage = `
+json-to-go - generates a go-struct from a json schema. The result is written to stdout by default. Specify [output-file] to write into a file.
+
+usage: json-to-go <json-schema> [output-file]
+			
+Options
+	[output-file]
+		Writes the generated output into the given file. If it already exists, it will be overwritten!
+`
+
 func main() {
-	var w io.WriteCloser
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), unsageMessage)
+	}
 
 	flag.Parse()
-	schemaPath := flag.Arg(0)
-	target := flag.Arg(1)
 
+	argCount := len(flag.Args())
+	if argCount < 1 || argCount > 2 {
+		log.Println("Error - invalid argument count:", argCount, flag.Args())
+		flag.Usage()
+		return
+	}
+
+	schemaPath := flag.Arg(0)
+	outputTarget := flag.Arg(1)
+
+	// read schema
 	result, err := ahgenerator.ToStruct(schemaPath)
 
 	if err != nil {
@@ -24,11 +45,13 @@ func main() {
 		return
 	}
 
-	if target != "" {
-		targetFile, err := os.Create(target)
+	// write result
+	var w io.WriteCloser
+	if outputTarget != "" {
+		targetFile, err := os.Create(outputTarget)
 
 		if err != nil {
-			log.Panicf("writing results to '%v' failed: %v", target, err)
+			log.Panicf("writing results to '%v' failed: %v", outputTarget, err)
 		}
 
 		w = targetFile
@@ -36,7 +59,6 @@ func main() {
 		w = os.Stdout
 	}
 	defer w.Close()
-
 
 	fmt.Fprint(w, result)
 }
